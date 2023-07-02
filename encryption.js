@@ -24,6 +24,8 @@ function keygen () {
   return pbkdf2Sync(entropy, salt, 100000, 32, 'sha256')
 }
 
+//
+
 function encrypt (plainText, key) {
   const cipher = createCipheriv(ALGO, key, iv)
   return cipher.update(plainText, 'utf8', 'hex') + cipher.final('hex')
