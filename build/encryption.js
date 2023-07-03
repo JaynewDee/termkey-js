@@ -4,8 +4,7 @@ exports.decrypt = exports.encrypt = exports.keygen = void 0;
 const crypto_1 = require("crypto");
 // Define encryption algorithm to use
 const ALGO = 'aes-256-cbc';
-// AES256-GCM
-// Advanced Encryption Standard in Galois Counter Mode
+// AES256-CBC
 // Why an Initialization Vector?
 // 
 // The use of an IV prevents the repetition of a sequence of text in data encryption.
