@@ -6,8 +6,7 @@ import {
 } from 'crypto'
 // Define encryption algorithm to use
 const ALGO = 'aes-256-cbc'
-// AES256-GCM
-// Advanced Encryption Standard in Galois Counter Mode
+// AES256-CBC
 
 // Why an Initialization Vector?
 // 

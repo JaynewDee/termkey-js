@@ -61,7 +61,7 @@ const displayHelp = async () => {
 
         ${command("gen")} ::: Generate a secure, unique encryption key
         ${command("encrypt || e")} ${arg("<filename>")} ::: Encrypt a text file and write encrypted ciphertext as .bin
-        ${command("decrypt || e")} ${arg("<filename>")} ::: Decrypt a .bin ciphertext file and write with prompted filename  
+        ${command("decrypt || d")} ${arg("<filename>")} ::: Decrypt a .bin ciphertext file and write with prompted filename  
         `
     )
     exit(0)
