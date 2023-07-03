@@ -1,7 +1,14 @@
 import { keygen, encrypt, decrypt } from './encryption'
 import { processArgs, FileHandler } from "./io"
 import { randomBytes } from "crypto"
+import readline from 'readline/promises';
 import { exit } from 'process'
+
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
 
 const {
     readText,
@@ -20,13 +27,12 @@ export async function ControlFlow() {
     }
 
     try {
-        ExecuteOperation(operation, target);
+        await ExecuteOperation(operation, target);
         exit(0)
     } catch (err) {
         console.error(err);
         exit(1)
     }
-
 }
 
 const generateKey = async () => {
@@ -52,15 +58,33 @@ const decryptFile = (target: string) => async () => {
 
     const plainText = decrypt(text, key, ivBuff)
 
-    console.log(`Writing decrypted data to txt file in current directory`)
-    await writePlainText('decrypted.txt', Buffer.from(plainText).toString('utf8'))
+    const outFileName = await rl.question("Enter a name for the output file:\n");
+    console.log(`Writing decrypted data to current directory as ${outFileName}`)
+    await writePlainText(outFileName, Buffer.from(plainText).toString('utf8'))
+}
+
+const displayHelp = async () => {
+    console.log(
+        `
+        termkey <command> <...args?>
+        _____________________________
+        Available Commands
+
+        gen ::: Generate a secure, unique encryption key
+        encrypt|e <filename> ::: Encrypt a text file and write encrypted ciphertext as .bin
+        decrypt|e <filename> ::: Decrypt a .bin ciphertext file and write with prompted filename  
+        `
+    )
+    exit(0)
 }
 
 async function ExecuteOperation(op: string, target: string) {
     const operations: { [key: string]: any } = {
+        help: displayHelp,
         keygen: generateKey,
         encrypt: encryptFile(target),
         decrypt: decryptFile(target)
     }
-    return operations[op]() || new Error("Invalid operation.  Check your spelling and type help for a list of commands.")
+
+    return await operations[op]() || new Error("Invalid operation.  Check your spelling and type help for a list of commands.")
 }

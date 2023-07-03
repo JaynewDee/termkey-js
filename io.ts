@@ -4,8 +4,8 @@ import { exit } from 'process';
 
 const VALID_FILE_TYPES = ['.txt', '.bin']
 
-function isValidFileName(shouldKeygen: boolean, filename: string) {
-  if (shouldKeygen) return true
+function isValidFileName(shouldSkip: boolean, filename: string) {
+  if (shouldSkip) return true
 
   const extension = extname(filename)
   return VALID_FILE_TYPES.includes(extension)
@@ -50,8 +50,9 @@ function processArgs(): [string, string] {
   const shouldEncrypt = op === 'e' || op === 'encrypt'
   const shouldDecrypt = op === 'd' || op === 'decrypt'
   const shouldKeygen = op === 'gen'
+  const shouldDisplayHelp = op === "h" || op === "help";
 
-  const invalidOp = !shouldEncrypt && !shouldDecrypt && !shouldKeygen
+  const invalidOp = !shouldEncrypt && !shouldDecrypt && !shouldKeygen && !shouldDisplayHelp
 
   if (invalidOp) {
     console.error(`Invalid Operation ::: ${op}`)
@@ -60,22 +61,16 @@ function processArgs(): [string, string] {
 
   const target = args[3]
 
-  if (!isValidFileName(shouldKeygen, target)) {
+  if (!isValidFileName(shouldKeygen || shouldDisplayHelp, target)) {
     console.error(`No support for filetype ${target}`)
     exit(1)
   }
 
-  if (shouldEncrypt) {
-    op = 'encrypt'
-  }
-
-  if (shouldDecrypt) {
-    op = 'decrypt'
-  }
-
-  if (shouldKeygen) {
-    op = 'keygen'
-  }
+  shouldDisplayHelp ? op = 'help'
+    : shouldEncrypt ? op = 'encrypt'
+      : shouldDecrypt ? op = 'decrypt'
+        : shouldKeygen ? op = 'keygen'
+          : op = ''
 
   return [op, target]
 }
