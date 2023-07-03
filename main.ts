@@ -1,4 +1,4 @@
-#!/user/bin/env node
+#!/usr/bin/env node
 
 import { ControlFlow } from "./command"
 import { exit } from "process"
