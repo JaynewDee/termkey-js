@@ -4,25 +4,27 @@ import { exit } from 'process';
 
 const VALID_FILE_TYPES = ['.txt', '.bin']
 
-function isValidFileName(shouldSkip: boolean, filename: string) {
-  if (shouldSkip) return true
-
-  const extension = extname(filename)
-  return VALID_FILE_TYPES.includes(extension)
+/* Encapsulate file-handling logic */
+interface HandlerMethods {
+  readText: (filename: string) => Promise<Buffer>,
+  readCipherText: (filename: string) => Promise<[string, string]>,
+  writeKey: (key: Buffer) => Promise<void>,
+  writePlainText: (filename: string, text: string) => Promise<void>,
+  writeCipherText: (filename: string, cipher: string, iv: Buffer) => Promise<void>
 }
 
-function FileHandler() {
+function FileHandler(): HandlerMethods {
   return {
-    readText: async (filename: string) => await readFile(filename),
-    readCipherText: async (filename: string) => {
+    readText: async (filename) => await readFile(filename),
+    readCipherText: async (filename) => {
       const cipherAndIv = await readFile(filename)
 
       const [text, iv] = cipherAndIv.toString('utf8').split(',')
       return [text, iv]
     },
-    writeKey: async (key: Buffer) => await writeFile('cipher_key.bin', key),
-    writePlainText: async (filename: string, text: string) => await writeFile(filename, text),
-    writeCipherText: async (filename: string, cipher: string, iv: Buffer) => {
+    writeKey: async (key) => await writeFile('cipher_key.bin', key),
+    writePlainText: async (filename, text) => await writeFile(filename, text),
+    writeCipherText: async (filename, cipher, iv) => {
       const writeable = cipher + ',' + iv.toString('hex')
 
       await writeFile(filename, writeable)
@@ -32,11 +34,7 @@ function FileHandler() {
   }
 }
 
-/*
-  Arguments Format: 
-  node main.js <operation> <path_to_txt_file>>
-*/
-
+// Parse and validate command-line arguments
 function processArgs(): [string, string] {
   const args = process.argv
 
@@ -73,6 +71,14 @@ function processArgs(): [string, string] {
           : op = ''
 
   return [op, target]
+}
+
+// Pass true for shouldSkip if command doesn't take filename parameter
+function isValidFileName(shouldSkip: boolean, filename: string): boolean {
+  if (shouldSkip) return true
+
+  const extension = extname(filename)
+  return VALID_FILE_TYPES.includes(extension)
 }
 
 export { processArgs, FileHandler }

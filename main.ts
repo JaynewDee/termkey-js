@@ -1,5 +1,6 @@
 import { ControlFlow } from "./command"
 import { exit } from "process"
+
 main()
 
 async function main() {
