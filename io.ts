@@ -1,6 +1,6 @@
 import { writeFile, readFile } from 'fs/promises';
 import { extname } from 'path';
-const { exit } = process
+import { exit } from 'process';
 
 const VALID_FILE_TYPES = ['.txt', '.bin']
 
