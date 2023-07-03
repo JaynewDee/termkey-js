@@ -3,7 +3,8 @@ import { processArgs, FileHandler } from "./io"
 import { randomBytes } from "crypto"
 import readline from 'readline/promises';
 import { exit } from 'process'
-
+import chalk from "chalk";
+const { log, error } = console;
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -22,7 +23,7 @@ export async function ControlFlow() {
     const [operation, target] = processArgs()
 
     if (!operation && !target) {
-        console.error('FATALITY')
+        error('FATALITY')
         exit(1)
     }
 
@@ -54,25 +55,29 @@ const decryptFile = (target: string) => async () => {
     const key = await readText('cipher_key.bin')
 
     const [text, iv] = await readCipherText(target)
-    const ivBuff = Buffer.from(iv, 'hex')
 
-    const plainText = decrypt(text, key, ivBuff)
+    const plainText = decrypt(text, key, Buffer.from(iv, 'hex'))
 
     const outFileName = await rl.question("Enter a name for the output file:\n");
-    console.log(`Writing decrypted data to current directory as ${outFileName}`)
+    log(`Writing decrypted data to current directory as ${outFileName}`)
     await writePlainText(outFileName, Buffer.from(plainText).toString('utf8'))
 }
-
+const blue = (text: string) => chalk.blue(text)
+const green = (text: string) => chalk.green(text);
+const yellow = (text: string) => chalk.yellow(text);
+const title = (text: string) => chalk.bgBlue.bold(text);
 const displayHelp = async () => {
-    console.log(
+    log(
         `
-        termkey <command> <...args?>
-        _____________________________
-        Available Commands
+        ${title("TERMKEY")}
 
-        gen ::: Generate a secure, unique encryption key
-        encrypt|e <filename> ::: Encrypt a text file and write encrypted ciphertext as .bin
-        decrypt|e <filename> ::: Decrypt a .bin ciphertext file and write with prompted filename  
+        termkey ${green("<command>")} ${yellow("<...args?>")}
+        _____________________________
+        ${blue("Available Commands")}
+
+        ${green("gen")} ::: Generate a secure, unique encryption key
+        ${green("encrypt|e")} ${yellow("<filename>")} ::: Encrypt a text file and write encrypted ciphertext as .bin
+        ${green("decrypt|e")} ${yellow("<filename>")} ::: Decrypt a .bin ciphertext file and write with prompted filename  
         `
     )
     exit(0)
@@ -86,5 +91,5 @@ async function ExecuteOperation(op: string, target: string) {
         decrypt: decryptFile(target)
     }
 
-    return await operations[op]() || new Error("Invalid operation.  Check your spelling and type help for a list of commands.")
+    return await operations[op]() || new Error("Invalid operation.  Check your spelling or type help for a list of commands.")
 }

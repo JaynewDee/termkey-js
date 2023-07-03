@@ -47,9 +47,9 @@ function processArgs(): [string, string] {
 
   let op = args[2]
 
+  const shouldKeygen = op === 'gen'
   const shouldEncrypt = op === 'e' || op === 'encrypt'
   const shouldDecrypt = op === 'd' || op === 'decrypt'
-  const shouldKeygen = op === 'gen'
   const shouldDisplayHelp = op === "h" || op === "help";
 
   const invalidOp = !shouldEncrypt && !shouldDecrypt && !shouldKeygen && !shouldDisplayHelp

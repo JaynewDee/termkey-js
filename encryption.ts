@@ -9,7 +9,8 @@ const ALGO = 'aes-256-cbc'
 // AES256-GCM
 // Advanced Encryption Standard in Galois Counter Mode
 
-// Initialization Vector
+// Why an Initialization Vector?
+// 
 // The use of an IV prevents the repetition of a sequence of text in data encryption.
 // Specifically, during encryption, an IV prevents a sequence of plaintext that's identical to
 // a previous plaintext sequence from producing the same ciphertext.
@@ -36,6 +37,7 @@ function encrypt(plainText: string, key: Buffer, iv: Buffer): string {
 }
 
 function decrypt(encryptedText: string, key: Buffer, iv: Buffer): string {
+  // All required arguments must be identical to encryption cipher used
   const decipher = createDecipheriv(ALGO, key, iv)
   return decipher.update(encryptedText, 'hex', 'utf8') + decipher.final('utf8')
 }
