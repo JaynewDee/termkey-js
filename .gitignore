@@ -1,1 +1,6 @@
 *.txt
+*.bin
+node_modules
+yarn.lock
+*.log
+notes.md
