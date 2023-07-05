@@ -12,14 +12,6 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-// Alias console formatting
-const styles = Object.freeze({
-    header: (text: string) => chalk.blue(text),
-    command: (text: string) => chalk.green(text),
-    arg: (text: string) => chalk.yellow(text),
-    title: (text: string) => chalk.bgBlue.bold(text)
-})
-
 // Expose necessary file handler methods
 const {
     readText,
@@ -47,24 +39,16 @@ export async function ControlFlow() {
     }
 }
 
-// Print pretty usage instructions
-const displayHelp = async () => {
-    const { header, command, arg, title } = styles;
+// Operation Switch - Execute function based on command line inputs
+async function ExecuteOperation(op: string, target: string) {
+    const operations: { [key: string]: any } = {
+        help: displayHelp,
+        keygen: generateKey,
+        encrypt: encryptFile(target),
+        decrypt: decryptFile(target)
+    }
 
-    log(
-        `
-        ${title("TERMKEY")}
-
-        termkey ${command("<command>")} ${arg("<...args?>")}
-        _____________________________
-        ${header("Available Commands")}
-
-        ${command("gen")} ::: Generate a secure, unique encryption key
-        ${command("encrypt || e")} ${arg("<filename>")} ::: Encrypt a text file and write encrypted ciphertext as .bin
-        ${command("decrypt || d")} ${arg("<filename>")} ::: Decrypt a .bin ciphertext file and write with prompted filename  
-        `
-    )
-    exit(0)
+    return await operations[op]() || new Error("Invalid operation.  Check your spelling or type help for a list of commands.")
 }
 
 // Produce cryptographically secure key file
@@ -74,7 +58,7 @@ const generateKey = async () => {
 }
 
 // Encrypt a plaintext file using generated key
-// File consists of concatenated cipher + , + iv
+// File consists of concatenated cipher + ',' + iv
 const encryptFile = (target: string) => async () => {
     const iv = randomBytes(16)
     const key = await readText('cipher_key.bin')
@@ -99,14 +83,31 @@ const decryptFile = (target: string) => async () => {
     await writePlainText(outFileName, Buffer.from(plainText).toString('utf8'))
 }
 
-// Operation Switch - Execute function based on command line inputs
-async function ExecuteOperation(op: string, target: string) {
-    const operations: { [key: string]: any } = {
-        help: displayHelp,
-        keygen: generateKey,
-        encrypt: encryptFile(target),
-        decrypt: decryptFile(target)
-    }
+// Alias console formatting
+const styles = Object.freeze({
+    header: (text: string) => chalk.blue(text),
+    command: (text: string) => chalk.green(text),
+    arg: (text: string) => chalk.yellow(text),
+    title: (text: string) => chalk.bgBlue.bold(text)
+})
 
-    return await operations[op]() || new Error("Invalid operation.  Check your spelling or type help for a list of commands.")
+// Print pretty usage instructions
+const displayHelp = async () => {
+    const { header, command, arg, title } = styles;
+
+    log(
+        `
+        ${title("TERMKEY")}
+
+        termkey ${command("<command>")} ${arg("<...args?>")}
+        _____________________________
+        ${header("Available Commands")}
+
+        ${command("gen")} ::: Generate a secure, unique encryption key
+        ${command("encrypt || e")} ${arg("<filename>")} ::: Encrypt a text file and write encrypted ciphertext as .bin
+        ${command("decrypt || d")} ${arg("<filename>")} ::: Decrypt a .bin ciphertext file and write with prompted filename  
+        `
+    )
+    exit(0)
 }
+

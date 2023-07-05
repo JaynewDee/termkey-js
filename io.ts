@@ -1,8 +1,9 @@
+// @ts-nocheck
 import { writeFile, readFile } from 'fs/promises';
 import { extname } from 'path';
 import { exit } from 'process';
 
-const VALID_FILE_TYPES = ['.txt', '.bin']
+const SUPPORTED_FILE_TYPES = ['.txt', '.bin', '.md']
 
 /* Encapsulate file-handling logic */
 interface HandlerMethods {
@@ -45,6 +46,7 @@ function processArgs(): [string, string] {
 
   let op = args[2]
 
+  // Each OR is another command alias
   const shouldKeygen = op === 'gen' || op === 'keygen'
   const shouldEncrypt = op === 'e' || op === 'encrypt'
   const shouldDecrypt = op === 'd' || op === 'decrypt'
@@ -59,11 +61,14 @@ function processArgs(): [string, string] {
 
   const target = args[3]
 
-  if (!isValidFileName(shouldKeygen || shouldDisplayHelp, target)) {
+  const shouldSkipValidate = shouldKeygen || shouldDisplayHelp;
+
+  if (!isSupportedFileName(shouldSkipValidate, target)) {
     console.error(`No support for filetype ${target}`)
     exit(1)
   }
 
+  // Normalize command after checks are passed
   shouldDisplayHelp ? op = 'help'
     : shouldEncrypt ? op = 'encrypt'
       : shouldDecrypt ? op = 'decrypt'
@@ -74,11 +79,11 @@ function processArgs(): [string, string] {
 }
 
 // Pass true for shouldSkip if command doesn't take filename parameter
-function isValidFileName(shouldSkip: boolean, filename: string): boolean {
+function isSupportedFileName(shouldSkip: boolean, filename: string): boolean {
   if (shouldSkip) return true
 
   const extension = extname(filename)
-  return VALID_FILE_TYPES.includes(extension)
+  return SUPPORTED_FILE_TYPES.includes(extension)
 }
 
 export { processArgs, FileHandler }

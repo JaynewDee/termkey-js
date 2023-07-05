@@ -25,7 +25,7 @@ function keygen() {
   return pbkdf2Sync(entropy, salt, 100000, 32, 'sha256')
 }
 
-//
+//////////////
 
 function encrypt(plainText: string, key: Buffer, iv: Buffer): string {
   // Create, update, and finalize are separate operations to allow
@@ -46,3 +46,4 @@ export {
   encrypt,
   decrypt
 }
+
