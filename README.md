@@ -62,3 +62,9 @@ to encrypt and decrypt sensitive text information.
 
 ---
 
+## Changelog
+
+### v1.0.5
+(7/5/23)
+- Added support for specifying output file names.
+- Improved UX with adjusted input prompts.

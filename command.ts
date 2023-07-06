@@ -1,10 +1,20 @@
 import { keygen, encrypt, decrypt } from './encryption'
-import { processArgs, FileHandler } from "./io"
+import { processArgs, FileHandler, SUPPORTED_FILE_TYPES } from "./io"
 import { randomBytes } from "crypto"
 import readline from 'readline/promises';
+import { extname } from 'path';
+import { existsSync } from 'fs';
 import { exit } from 'process'
 import chalk from "chalk";
 const { log, error } = console;
+
+// Expose necessary file handler methods
+const {
+    readText,
+    readCipherText,
+    writePlainText,
+    writeCipherText
+} = FileHandler()
 
 // Enable async prompt-based input
 const rl = readline.createInterface({
@@ -12,14 +22,33 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 
-// Expose necessary file handler methods
-const {
-    readText,
-    readCipherText,
-    writeKey,
-    writePlainText,
-    writeCipherText
-} = FileHandler()
+class Prompter {
+    static async filename() {
+        let name = '';
+
+        while (!name) {
+            const userInput = await rl.question("Enter a name for the file:\n");
+            const ext = extname(userInput)
+            const isValid = SUPPORTED_FILE_TYPES.includes(ext)
+            if (isValid) {
+                name = userInput
+            }
+        }
+
+        return name
+    }
+    static async keypath() {
+        let path = '';
+
+        while (!path) {
+            const userInput = await rl.question("Enter the path to the cipher's key:\n")
+            if (existsSync(userInput)) {
+                path = userInput
+            }
+        }
+        return path.trim()
+    }
+}
 
 // High-level command controller
 export async function ControlFlow() {
@@ -53,30 +82,38 @@ async function ExecuteOperation(op: string, target: string) {
 
 // Produce cryptographically secure key file
 const generateKey = async () => {
+    const filename = await Prompter.filename();
     const key = keygen()
-    await writeKey(key)
+    await writePlainText(filename, key)
 }
 
 // Encrypt a plaintext file using generated key
 // File consists of concatenated cipher + ',' + iv
 const encryptFile = (target: string) => async () => {
     const iv = randomBytes(16)
-    const key = await readText('cipher_key.bin')
+    const keyPath = await Prompter.keypath();
+
+    const key = await readText(keyPath)
     const plainText = await readText(target)
 
+    const filename = await Prompter.filename()
+
+    log(`Ciphertext written to ${filename}`)
+
     const encrypted = encrypt(plainText.toString('utf8'), key, iv)
-    const filename = target.split(".")[0]
-    await writeCipherText(`${filename}_cipher.bin`, encrypted, iv)
+    await writeCipherText(filename, encrypted, iv)
 }
 
 // Decrypt using identical parameters
 // Prompt user for output file name and write decrypted text 
 const decryptFile = (target: string) => async () => {
-    const key = await readText('cipher_key.bin')
+    const keyPath = await Prompter.keypath();
+    const key = await readText(keyPath)
     const [text, iv] = await readCipherText(target)
-    const plainText = decrypt(text, key, Buffer.from(iv, 'hex'))
 
-    const outFileName = await rl.question("Enter a name for the output file:\n");
+    const outFileName = await Prompter.filename();
+
+    const plainText = decrypt(text, key, Buffer.from(iv, 'hex'))
 
     log(`Writing decrypted data to current directory as ${outFileName}`)
 
