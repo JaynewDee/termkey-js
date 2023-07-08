@@ -47,6 +47,18 @@ to encrypt and decrypt sensitive text information.
 
 ---
 
+## _Examples_
+> `termkey gen`
+> 
+>  _PRODUCES_  
+> > ![Screenshot of Keygen terminal output](assets/gen-key.png)
+> > ![Screenshot of jumbled unicode representation of key](assets/key-cipher.png)
+>  
+> _THEN_  
+> `termkey encrypt plaintext.md`
+> > ![Unencrypted plaintext input](assets/plain-input.png)
+        
+---
 ## _Contributing_
 > Reach out to me if you wish to help improve the application! 
 
@@ -62,3 +74,9 @@ to encrypt and decrypt sensitive text information.
 
 ---
 
+## Changelog
+
+### v1.0.5
+(7/5/23)
+- Added support for specifying output file names.
+- Improved UX with adjusted input prompts.

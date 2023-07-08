@@ -8,11 +8,7 @@ import {
 const ALGO = 'aes-256-cbc'
 // AES256-CBC
 
-// Why an Initialization Vector?
-// 
-// The use of an IV prevents the repetition of a sequence of text in data encryption.
-// Specifically, during encryption, an IV prevents a sequence of plaintext that's identical to
-// a previous plaintext sequence from producing the same ciphertext.
+////////////////
 
 // Key is securely generated using pbkdf2, a key derivation function with a sliding computational cost,
 // used to reduce vulnerability to brute-force attacks

@@ -1,22 +1,18 @@
 import { keygen, encrypt, decrypt } from './encryption'
 import { processArgs, FileHandler } from "./io"
 import { randomBytes } from "crypto"
-import readline from 'readline/promises';
 import { exit } from 'process'
 import chalk from "chalk";
-const { log, error } = console;
+import { Prompter } from './prompt';
 
-// Enable async prompt-based input
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
+//
+const { log, error } = console;
+//
 
 // Expose necessary file handler methods
 const {
     readText,
     readCipherText,
-    writeKey,
     writePlainText,
     writeCipherText
 } = FileHandler()
@@ -34,7 +30,7 @@ export async function ControlFlow() {
         await ExecuteOperation(operation, target);
         exit(0)
     } catch (err) {
-        console.error(err);
+        error(err);
         exit(1)
     }
 }
@@ -53,30 +49,42 @@ async function ExecuteOperation(op: string, target: string) {
 
 // Produce cryptographically secure key file
 const generateKey = async () => {
+    const filename = await Prompter.filename();
     const key = keygen()
-    await writeKey(key)
+    await writePlainText(filename, key)
 }
 
 // Encrypt a plaintext file using generated key
 // File consists of concatenated cipher + ',' + iv
 const encryptFile = (target: string) => async () => {
+    // The use of an IV prevents the repetition of a sequence of text in data encryption.
+    // During encryption, an IV prevents a sequence of plaintext that's identical to
+    // a previous plaintext sequence from producing the same ciphertext.
+
     const iv = randomBytes(16)
-    const key = await readText('cipher_key.bin')
     const plainText = await readText(target)
 
+    const keyPath = await Prompter.keypath();
+    const outFileName = await Prompter.filename()
+    const key = await readText(keyPath)
+
+    log(`Ciphertext written to ${outFileName}`)
+
     const encrypted = encrypt(plainText.toString('utf8'), key, iv)
-    const filename = target.split(".")[0]
-    await writeCipherText(`${filename}_cipher.bin`, encrypted, iv)
+    await writeCipherText(outFileName, encrypted, iv)
 }
 
 // Decrypt using identical parameters
 // Prompt user for output file name and write decrypted text 
 const decryptFile = (target: string) => async () => {
-    const key = await readText('cipher_key.bin')
-    const [text, iv] = await readCipherText(target)
-    const plainText = decrypt(text, key, Buffer.from(iv, 'hex'))
+    const keyPath = await Prompter.keypath();
+    const outFileName = await Prompter.filename();
 
-    const outFileName = await rl.question("Enter a name for the output file:\n");
+    const key = await readText(keyPath)
+    const [text, iv] = await readCipherText(target)
+
+
+    const plainText = decrypt(text, key, Buffer.from(iv, 'hex'))
 
     log(`Writing decrypted data to current directory as ${outFileName}`)
 

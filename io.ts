@@ -3,14 +3,13 @@ import { writeFile, readFile } from 'fs/promises';
 import { extname } from 'path';
 import { exit } from 'process';
 
-const SUPPORTED_FILE_TYPES = ['.txt', '.bin', '.md']
+export const SUPPORTED_FILE_TYPES = ['.txt', '.bin', '.md']
 
 /* Encapsulate file-handling logic */
 interface HandlerMethods {
   readText: (filename: string) => Promise<Buffer>,
   readCipherText: (filename: string) => Promise<[string, string]>,
-  writeKey: (key: Buffer) => Promise<void>,
-  writePlainText: (filename: string, text: string) => Promise<void>,
+  writePlainText: (filename: string, text: string | Buffer) => Promise<void>,
   writeCipherText: (filename: string, cipher: string, iv: Buffer) => Promise<void>
 }
 
@@ -20,10 +19,8 @@ function FileHandler(): HandlerMethods {
     readCipherText: async (filename) => {
       const cipherAndIv = await readFile(filename)
 
-      const [text, iv] = cipherAndIv.toString('utf8').split(',')
-      return [text, iv]
+      return cipherAndIv.toString('utf8').split(',')
     },
-    writeKey: async (key) => await writeFile('cipher_key.bin', key),
     writePlainText: async (filename, text) => await writeFile(filename, text),
     writeCipherText: async (filename, cipher, iv) => {
       const writeable = cipher + ',' + iv.toString('hex')
@@ -67,6 +64,7 @@ function processArgs(): [string, string] {
     console.error(`No support for filetype ${target}`)
     exit(1)
   }
+
 
   // Normalize command after checks are passed
   shouldDisplayHelp ? op = 'help'
