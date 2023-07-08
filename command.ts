@@ -1,12 +1,13 @@
 import { keygen, encrypt, decrypt } from './encryption'
-import { processArgs, FileHandler, SUPPORTED_FILE_TYPES } from "./io"
+import { processArgs, FileHandler } from "./io"
 import { randomBytes } from "crypto"
-import readline from 'readline/promises';
-import { extname } from 'path';
-import { existsSync } from 'fs';
 import { exit } from 'process'
 import chalk from "chalk";
+import { Prompter } from './prompt';
+
+//
 const { log, error } = console;
+//
 
 // Expose necessary file handler methods
 const {
@@ -15,40 +16,6 @@ const {
     writePlainText,
     writeCipherText
 } = FileHandler()
-
-// Enable async prompt-based input
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
-
-class Prompter {
-    static async filename() {
-        let name = '';
-
-        while (!name) {
-            const userInput = await rl.question("Enter a name for the file:\n");
-            const ext = extname(userInput)
-            const isValid = SUPPORTED_FILE_TYPES.includes(ext)
-            if (isValid) {
-                name = userInput
-            }
-        }
-
-        return name
-    }
-    static async keypath() {
-        let path = '';
-
-        while (!path) {
-            const userInput = await rl.question("Enter the path to the cipher's key:\n")
-            if (existsSync(userInput)) {
-                path = userInput
-            }
-        }
-        return path.trim()
-    }
-}
 
 // High-level command controller
 export async function ControlFlow() {
@@ -63,7 +30,7 @@ export async function ControlFlow() {
         await ExecuteOperation(operation, target);
         exit(0)
     } catch (err) {
-        console.error(err);
+        error(err);
         exit(1)
     }
 }
@@ -90,28 +57,32 @@ const generateKey = async () => {
 // Encrypt a plaintext file using generated key
 // File consists of concatenated cipher + ',' + iv
 const encryptFile = (target: string) => async () => {
-    const iv = randomBytes(16)
-    const keyPath = await Prompter.keypath();
+    // The use of an IV prevents the repetition of a sequence of text in data encryption.
+    // During encryption, an IV prevents a sequence of plaintext that's identical to
+    // a previous plaintext sequence from producing the same ciphertext.
 
-    const key = await readText(keyPath)
+    const iv = randomBytes(16)
     const plainText = await readText(target)
 
-    const filename = await Prompter.filename()
+    const keyPath = await Prompter.keypath();
+    const outFileName = await Prompter.filename()
+    const key = await readText(keyPath)
 
-    log(`Ciphertext written to ${filename}`)
+    log(`Ciphertext written to ${outFileName}`)
 
     const encrypted = encrypt(plainText.toString('utf8'), key, iv)
-    await writeCipherText(filename, encrypted, iv)
+    await writeCipherText(outFileName, encrypted, iv)
 }
 
 // Decrypt using identical parameters
 // Prompt user for output file name and write decrypted text 
 const decryptFile = (target: string) => async () => {
     const keyPath = await Prompter.keypath();
+    const outFileName = await Prompter.filename();
+
     const key = await readText(keyPath)
     const [text, iv] = await readCipherText(target)
 
-    const outFileName = await Prompter.filename();
 
     const plainText = decrypt(text, key, Buffer.from(iv, 'hex'))
 

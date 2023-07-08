@@ -19,8 +19,7 @@ function FileHandler(): HandlerMethods {
     readCipherText: async (filename) => {
       const cipherAndIv = await readFile(filename)
 
-      const [text, iv] = cipherAndIv.toString('utf8').split(',')
-      return [text, iv]
+      return cipherAndIv.toString('utf8').split(',')
     },
     writePlainText: async (filename, text) => await writeFile(filename, text),
     writeCipherText: async (filename, cipher, iv) => {
