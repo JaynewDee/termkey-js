@@ -9,20 +9,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.FileHandler = exports.processArgs = void 0;
+exports.FileHandler = exports.processArgs = exports.SUPPORTED_FILE_TYPES = void 0;
+// @ts-nocheck
 const promises_1 = require("fs/promises");
 const path_1 = require("path");
 const process_1 = require("process");
-const VALID_FILE_TYPES = ['.txt', '.bin'];
+exports.SUPPORTED_FILE_TYPES = ['.txt', '.bin', '.md'];
 function FileHandler() {
     return {
         readText: (filename) => __awaiter(this, void 0, void 0, function* () { return yield (0, promises_1.readFile)(filename); }),
         readCipherText: (filename) => __awaiter(this, void 0, void 0, function* () {
             const cipherAndIv = yield (0, promises_1.readFile)(filename);
-            const [text, iv] = cipherAndIv.toString('utf8').split(',');
-            return [text, iv];
+            return cipherAndIv.toString('utf8').split(',');
         }),
-        writeKey: (key) => __awaiter(this, void 0, void 0, function* () { return yield (0, promises_1.writeFile)('cipher_key.bin', key); }),
         writePlainText: (filename, text) => __awaiter(this, void 0, void 0, function* () { return yield (0, promises_1.writeFile)(filename, text); }),
         writeCipherText: (filename, cipher, iv) => __awaiter(this, void 0, void 0, function* () {
             const writeable = cipher + ',' + iv.toString('hex');
@@ -40,6 +39,7 @@ function processArgs() {
         (0, process_1.exit)(1);
     }
     let op = args[2];
+    // Each OR is another command alias
     const shouldKeygen = op === 'gen' || op === 'keygen';
     const shouldEncrypt = op === 'e' || op === 'encrypt';
     const shouldDecrypt = op === 'd' || op === 'decrypt';
@@ -50,10 +50,12 @@ function processArgs() {
         (0, process_1.exit)(1);
     }
     const target = args[3];
-    if (!isValidFileName(shouldKeygen || shouldDisplayHelp, target)) {
+    const shouldSkipValidate = shouldKeygen || shouldDisplayHelp;
+    if (!isSupportedFileName(shouldSkipValidate, target)) {
         console.error(`No support for filetype ${target}`);
         (0, process_1.exit)(1);
     }
+    // Normalize command after checks are passed
     shouldDisplayHelp ? op = 'help'
         : shouldEncrypt ? op = 'encrypt'
             : shouldDecrypt ? op = 'decrypt'
@@ -63,9 +65,9 @@ function processArgs() {
 }
 exports.processArgs = processArgs;
 // Pass true for shouldSkip if command doesn't take filename parameter
-function isValidFileName(shouldSkip, filename) {
+function isSupportedFileName(shouldSkip, filename) {
     if (shouldSkip)
         return true;
     const extension = (0, path_1.extname)(filename);
-    return VALID_FILE_TYPES.includes(extension);
+    return exports.SUPPORTED_FILE_TYPES.includes(extension);
 }
