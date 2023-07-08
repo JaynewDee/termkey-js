@@ -4,9 +4,7 @@ import readline from 'readline/promises';
 import { SUPPORTED_FILE_TYPES } from './io';
 
 export class Prompter {
-    static rl: readline.Interface;
-
-    rl = readline.createInterface({
+    private static rl: readline.Interface = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
