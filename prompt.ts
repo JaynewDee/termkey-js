@@ -19,8 +19,7 @@ export class Prompter {
                 name = userInput
             }
         }
-
-        return name
+        return name.trim()
     }
 
     static async keypath() {
@@ -32,7 +31,10 @@ export class Prompter {
                 path = userInput
             }
         }
-
         return path.trim()
+    }
+
+    static async key_and_filename() {
+        return [await this.keypath(), await this.filename()]
     }
 }

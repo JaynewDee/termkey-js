@@ -22,8 +22,7 @@ export async function ControlFlow() {
     const [operation, target] = processArgs()
 
     if (!operation && !target) {
-        error('FATALITY')
-        exit(1)
+        throw new Error('FATALITY. One or more required arguments not present.')
     }
 
     try {
@@ -31,7 +30,7 @@ export async function ControlFlow() {
         exit(0)
     } catch (err) {
         error(err);
-        exit(1)
+        throw err;
     }
 }
 
@@ -44,7 +43,11 @@ async function ExecuteOperation(op: string, target: string) {
         decrypt: decryptFile(target)
     }
 
-    return await operations[op]() || new Error("Invalid operation.  Check your spelling or type help for a list of commands.")
+    try {
+        return await operations[op]()
+    } catch (err) {
+        throw new Error("Invalid operation.  Check your spelling or type help for a list of commands.")
+    }
 }
 
 // Produce cryptographically secure key file
@@ -64,8 +67,7 @@ const encryptFile = (target: string) => async () => {
     const iv = randomBytes(16)
     const plainText = await readText(target)
 
-    const keyPath = await Prompter.keypath();
-    const outFileName = await Prompter.filename()
+    const [keyPath, outFileName] = await Prompter.key_and_filename();
     const key = await readText(keyPath)
 
     log(`Ciphertext written to ${outFileName}`)
@@ -77,12 +79,10 @@ const encryptFile = (target: string) => async () => {
 // Decrypt using identical parameters
 // Prompt user for output file name and write decrypted text 
 const decryptFile = (target: string) => async () => {
-    const keyPath = await Prompter.keypath();
-    const outFileName = await Prompter.filename();
+    const [keyPath, outFileName] = await Prompter.key_and_filename();
 
     const key = await readText(keyPath)
     const [text, iv] = await readCipherText(target)
-
 
     const plainText = decrypt(text, key, Buffer.from(iv, 'hex'))
 

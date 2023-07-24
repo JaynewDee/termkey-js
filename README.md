@@ -80,3 +80,4 @@ to encrypt and decrypt sensitive text information.
 (7/5/23)
 - Added support for specifying output file names.
 - Improved UX with adjusted input prompts.
+- 

@@ -61,8 +61,7 @@ function processArgs(): [string, string] {
   const shouldSkipValidate = shouldKeygen || shouldDisplayHelp;
 
   if (!isSupportedFileName(shouldSkipValidate, target)) {
-    console.error(`No support for filetype ${target}`)
-    exit(1)
+    throw new Error(`No support for filetype ${target}`)
   }
 
 
